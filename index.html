@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saiflow — Grafos & Fluxogramas Interativos</title>
+  <meta name="description" content="Crie mapas mentais visuais interativos com grafos e fluxogramas personalizáveis. Arraste, conecte e organize suas ideias com o Saiflow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+
+  <!-- ===== Top Bar ===== -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebarToggle" title="Alternar painel lateral">☰</button>
+      <h1 class="app-title">Saiflow</h1>
+    </div>
+    <div class="topbar-center">
+      <div class="theme-switcher">
+        <button class="theme-btn active" data-theme="dark" title="Modo Escuro">🌙</button>
+        <button class="theme-btn" data-theme="light" title="Modo Claro">☀️</button>
+        <button class="theme-btn" data-theme="warm" title="Modo Tarde">🌅</button>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-action" id="exportBtn" title="Exportar mapa mental">📤 <span>Exportar</span></button>
+      <button class="topbar-action" id="importBtn" title="Importar mapa mental">📥 <span>Importar</span></button>
+      <input type="file" id="importFile" accept=".json,.mindflow,.saiflow" style="display:none">
+    </div>
+  </header>
+
+  <!-- ===== Main Wrapper ===== -->
+  <div class="main-wrapper">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">✦ Nova Caixa</h3>
+        <div class="form-group">
+          <label for="nodeName">Nome</label>
+          <input type="text" id="nodeName" placeholder="Nome da caixa..." maxlength="60">
+        </div>
+        <div class="form-group">
+          <label>Forma</label>
+          <div class="shape-selector" id="shapeSelector">
+            <button class="shape-btn active" data-shape="rectangle" title="Retângulo">▬</button>
+            <button class="shape-btn" data-shape="rounded" title="Arredondado">▢</button>
+            <button class="shape-btn" data-shape="circle" title="Círculo">●</button>
+            <button class="shape-btn" data-shape="diamond" title="Diamante">◆</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="nodeColor">Cor</label>
+          <input type="color" id="nodeColor" value="#3B82F6">
+        </div>
+        <div class="form-group">
+          <label for="nodeWidth">Largura</label>
+          <input type="range" id="nodeWidth" min="60" max="320" value="160">
+          <span id="nodeWidthVal">160</span>
+        </div>
+        <div class="form-group">
+          <label for="nodeHeight">Altura</label>
+          <input type="range" id="nodeHeight" min="40" max="240" value="80">
+          <span id="nodeHeightVal">80</span>
+        </div>
+        <button class="btn btn-primary" id="addNodeBtn">+ Adicionar Caixa</button>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">🔗 Conexões</h3>
+        <button class="btn btn-connect" id="connectModeBtn">🔗 Modo Conexão</button>
+        <button class="btn btn-disconnect" id="disconnectModeBtn" style="margin-top:8px">✂️ Remover Conexão</button>
+        <p class="sidebar-hint" id="connectHint" style="display:none"></p>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">⚡ Ações</h3>
+        <button class="btn btn-danger" id="clearAllBtn">🗑️ Limpar Tudo</button>
+      </div>
+    </aside>
+
+    <!-- ===== Canvas ===== -->
+    <main class="canvas-viewport" id="canvasViewport">
+      <div class="canvas" id="canvas">
+        <svg class="connections-svg" id="connectionsSvg" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
+              <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" opacity="0.6"/>
+            </marker>
+          </defs>
+        </svg>
+        <!-- Nodes are inserted here by JS -->
+      </div>
+
+      <!-- Empty state overlay -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🧠</div>
+        <h2>Comece seu mapa mental</h2>
+        <p>Use o painel lateral para adicionar caixas e criar conexões.<br>Dê duplo-clique na área para criar rapidamente.</p>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" id="zoomOut" title="Diminuir zoom">−</button>
+        <span class="zoom-level" id="zoomLevel">100%</span>
+        <button class="zoom-btn" id="zoomIn" title="Aumentar zoom">+</button>
+        <button class="zoom-btn" id="zoomReset" title="Resetar zoom" style="font-size:12px">⟲</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== Annotation Modal ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card" id="modalCard">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">
+          <span class="modal-title-dot" id="modalDot"></span>
+          <span id="modalTitleText"></span>
+        </h2>
+        <button class="modal-close" id="modalClose" title="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-annotation" id="modalAnnotation"></div>
+        <textarea class="modal-editor" id="modalEditor" style="display:none" placeholder="Escreva suas anotações aqui..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modalEdit">✏️ Editar</button>
+        <button class="btn btn-primary" id="modalOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Context Menu ===== -->
+  <div class="context-menu" id="contextMenu" style="display:none">
+    <button class="context-item" id="ctxEditName">✏️ Renomear</button>
+    <button class="context-item" id="ctxEditAnnotation">📝 Editar Anotação</button>
+    <button class="context-item" id="ctxChangeColor">🎨 Mudar Cor</button>
+    <button class="context-item danger" id="ctxDelete">🗑️ Excluir</button>
+  </div>
+
+  <!-- ===== Toast Notifications ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
