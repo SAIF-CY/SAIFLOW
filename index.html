@@ -27,7 +27,7 @@
       </div>
     </div>
     <div class="topbar-right">
-      <button class="topbar-action" id="exportBtn" title="Exportar mapa mental">📤 <span>Exportar</span></button>
+      <button class="topbar-action" id="exportBtn" title="Salvar mapa mental">📤 <span>Salvar</span></button>
       <button class="topbar-action" id="importBtn" title="Importar mapa mental">📥 <span>Importar</span></button>
       <input type="file" id="importFile" accept=".json,.mindflow,.saiflow" style="display:none">
     </div>
@@ -38,49 +38,63 @@
 
     <!-- ===== Sidebar ===== -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">✦ Nova Caixa</h3>
-        <div class="form-group">
-          <label for="nodeName">Nome</label>
-          <input type="text" id="nodeName" placeholder="Nome da caixa..." maxlength="60">
-        </div>
-        <div class="form-group">
-          <label>Forma</label>
-          <div class="shape-selector" id="shapeSelector">
-            <button class="shape-btn active" data-shape="rectangle" title="Retângulo">▬</button>
-            <button class="shape-btn" data-shape="rounded" title="Arredondado">▢</button>
-            <button class="shape-btn" data-shape="circle" title="Círculo">●</button>
-            <button class="shape-btn" data-shape="diamond" title="Diamante">◆</button>
+      <details class="sidebar-group" open>
+        <summary class="sidebar-group-title">Editar Flow</summary>
+        <div class="sidebar-group-content">
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">✦ Nova Caixa</h3>
+            <div class="form-group">
+              <label for="nodeName">Nome</label>
+              <input type="text" id="nodeName" placeholder="Nome da caixa..." maxlength="60">
+            </div>
+            <div class="form-group">
+              <label>Forma</label>
+              <div class="shape-selector" id="shapeSelector">
+                <button class="shape-btn active" data-shape="rectangle" title="Retângulo">▬</button>
+                <button class="shape-btn" data-shape="rounded" title="Arredondado">▢</button>
+                <button class="shape-btn" data-shape="circle" title="Círculo">●</button>
+                <button class="shape-btn" data-shape="diamond" title="Diamante">◆</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="nodeColor">Cor</label>
+              <input type="color" id="nodeColor" value="#3B82F6">
+            </div>
+            <div class="form-group">
+              <label for="nodeWidth">Largura</label>
+              <input type="range" id="nodeWidth" min="60" max="320" value="160">
+              <span id="nodeWidthVal">160</span>
+            </div>
+            <div class="form-group">
+              <label for="nodeHeight">Altura</label>
+              <input type="range" id="nodeHeight" min="40" max="240" value="80">
+              <span id="nodeHeightVal">80</span>
+            </div>
+            <button class="btn btn-primary" id="addNodeBtn">+ Adicionar Caixa</button>
+          </div>
+
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">🔗 Conexões</h3>
+            <button class="btn btn-connect" id="connectModeBtn">🔗 Modo Conexão</button>
+            <button class="btn btn-disconnect" id="disconnectModeBtn" style="margin-top:8px">✂️ Remover Conexão</button>
+            <p class="sidebar-hint" id="connectHint" style="display:none"></p>
+          </div>
+
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">⚡ Ações</h3>
+            <button class="btn btn-danger" id="clearAllBtn">🗑️ Limpar Tudo</button>
           </div>
         </div>
-        <div class="form-group">
-          <label for="nodeColor">Cor</label>
-          <input type="color" id="nodeColor" value="#3B82F6">
-        </div>
-        <div class="form-group">
-          <label for="nodeWidth">Largura</label>
-          <input type="range" id="nodeWidth" min="60" max="320" value="160">
-          <span id="nodeWidthVal">160</span>
-        </div>
-        <div class="form-group">
-          <label for="nodeHeight">Altura</label>
-          <input type="range" id="nodeHeight" min="40" max="240" value="80">
-          <span id="nodeHeightVal">80</span>
-        </div>
-        <button class="btn btn-primary" id="addNodeBtn">+ Adicionar Caixa</button>
-      </div>
+      </details>
 
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">🔗 Conexões</h3>
-        <button class="btn btn-connect" id="connectModeBtn">🔗 Modo Conexão</button>
-        <button class="btn btn-disconnect" id="disconnectModeBtn" style="margin-top:8px">✂️ Remover Conexão</button>
-        <p class="sidebar-hint" id="connectHint" style="display:none"></p>
-      </div>
-
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">⚡ Ações</h3>
-        <button class="btn btn-danger" id="clearAllBtn">🗑️ Limpar Tudo</button>
-      </div>
+      <details class="sidebar-group">
+        <summary class="sidebar-group-title">Meus flows</summary>
+        <div class="sidebar-group-content">
+          <ul id="savedFlowsList" class="saved-flows-list">
+            <!-- Lista de flows salvos renderizada pelo JS -->
+          </ul>
+        </div>
+      </details>
     </aside>
 
     <!-- ===== Canvas ===== -->
@@ -130,6 +144,31 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="modalEdit">✏️ Editar</button>
         <button class="btn btn-primary" id="modalOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Color Picker Modal ===== -->
+  <div class="modal-overlay" id="colorModalOverlay" style="display:none">
+    <div class="color-picker-card" id="colorModalCard">
+      <div class="color-picker-header">
+        <h3 class="color-picker-title">Escolha uma cor</h3>
+        <button class="modal-close" id="colorModalClose" title="Fechar">✕</button>
+      </div>
+      <div class="color-picker-body">
+        <div class="color-grid" id="colorGrid"></div>
+        <div class="color-picker-custom-area">
+          <span class="custom-color-label">Personalizado</span>
+          <div class="custom-color-row">
+            <label class="custom-color-btn" title="Escolher cor personalizada">
+              +
+              <input type="color" id="customColorInput" />
+            </label>
+            <div class="custom-color-preview" id="customColorPreview">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
