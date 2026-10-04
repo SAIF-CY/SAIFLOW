@@ -59,7 +59,7 @@ Quando duas caixas com cores diferentes são conectadas, a aplicação insere di
 
 - **Estruturação:** HTML5 Semântico
 - **Lógica de Aplicação:** Vanilla Javascript (ES6)
-- **Estilização e Layout:** CSS3 Moderno (Variáveis HSL, Flexbox, Keyframes, Animações e Backdrop-filters)
+- **Estilização e Layout:** CSS3 Moderno (Variáveis CSS, Flexbox, Keyframes, Animações e Backdrop-filters)
 - **Renderização Gráfica:** SVG nativo (Scalable Vector Graphics) para conexões e curvas Bezier
 
 ---
