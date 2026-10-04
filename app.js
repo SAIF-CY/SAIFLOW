@@ -53,6 +53,8 @@
     exportBtn: $('#exportBtn'),
     importBtn: $('#importBtn'),
     importFile: $('#importFile'),
+    // Sidebar Flows
+    savedFlowsList: $('#savedFlowsList'),
     // Modal
     modalOverlay: $('#modalOverlay'),
     modalCard: $('#modalCard'),
@@ -74,6 +76,12 @@
     zoomOut: $('#zoomOut'),
     zoomReset: $('#zoomReset'),
     zoomLevel: $('#zoomLevel'),
+    // Color Modal
+    colorModalOverlay: $('#colorModalOverlay'),
+    colorGrid: $('#colorGrid'),
+    colorModalClose: $('#colorModalClose'),
+    customColorInput: $('#customColorInput'),
+    customColorPreview: $('#customColorPreview'),
     // Toast
     toastContainer: $('#toastContainer'),
   };
@@ -86,6 +94,7 @@
     updateEmptyState();
     updateZoomUI();
     applyCanvasTransform();
+    renderSavedFlows();
     bindEvents();
   }
 
@@ -130,12 +139,13 @@
     dom.viewport.addEventListener('pointerdown', onCanvasPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     dom.viewport.addEventListener('wheel', onWheel, { passive: false });
     dom.viewport.addEventListener('dblclick', onCanvasDblClick);
 
     // Zoom controls
-    dom.zoomIn.addEventListener('click', () => zoomBy(0.15));
-    dom.zoomOut.addEventListener('click', () => zoomBy(-0.15));
+    dom.zoomIn.addEventListener('click', () => zoomByFactor(1.2));
+    dom.zoomOut.addEventListener('click', () => zoomByFactor(1/1.2));
     dom.zoomReset.addEventListener('click', () => { state.canvas = { x: 0, y: 0, zoom: 1 }; applyCanvasTransform(); updateZoomUI(); saveState(); });
 
     // Modal
@@ -155,6 +165,9 @@
 
     // Keyboard
     document.addEventListener('keydown', onKeyDown);
+
+    // Color Modal setup
+    setupColorModal();
   }
 
   // ─── Theme ────────────────────────────────────
@@ -184,7 +197,7 @@
     const color = dom.nodeColor.value;
     let w = parseInt(dom.nodeWidth.value);
     let h = parseInt(dom.nodeHeight.value);
-    if (shape === 'circle') { h = w; }
+    if (shape === 'circle' || shape === 'diamond') { h = w; }
 
     // Position: center of current viewport
     const vpRect = dom.viewport.getBoundingClientRect();
@@ -217,7 +230,7 @@
     const color = dom.nodeColor.value;
     let w = parseInt(dom.nodeWidth.value);
     let h = parseInt(dom.nodeHeight.value);
-    if (shape === 'circle') h = w;
+    if (shape === 'circle' || shape === 'diamond') h = w;
 
     const node = {
       id: uid(),
@@ -250,6 +263,15 @@
     saveState();
   }
 
+  function getLuminance(hex) {
+    if (!hex || hex[0] !== '#') return 0;
+    const rgb = parseInt(hex.slice(1), 16);
+    const r = (rgb >> 16) & 0xff;
+    const g = (rgb >>  8) & 0xff;
+    const b = (rgb >>  0) & 0xff;
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  }
+
   function renderNode(node) {
     // Remove existing if any
     const existing = dom.canvas.querySelector(`.node[data-id="${node.id}"]`);
@@ -265,19 +287,22 @@
     el.style.height = node.h + 'px';
 
     el.innerHTML = `
-      <div class="node-inner" style="background-color: ${node.color};">
-        <span class="node-label">${escapeHtml(node.name)}</span>
-      </div>
-      <div class="node-ports">
-        <div class="port port-top"></div>
-        <div class="port port-right"></div>
-        <div class="port port-bottom"></div>
-        <div class="port port-left"></div>
+      <div class="node-inner">
+        <span class="node-label"></span>
       </div>
     `;
+    const inner = el.querySelector('.node-inner');
+    if (inner) inner.style.backgroundColor = node.color;
+    const luminance = getLuminance(node.color);
+    const label = el.querySelector('.node-label');
+    if (label) {
+      label.textContent = node.name;
+      label.style.color = luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+    }
 
     // Events on the node element
     el.addEventListener('pointerdown', (e) => onNodePointerDown(e, node.id));
+    el.addEventListener('dblclick', (e) => { e.stopPropagation(); openModal(node.id); });
     el.addEventListener('contextmenu', (e) => onNodeContextMenu(e, node.id));
 
     dom.canvas.appendChild(el);
@@ -301,8 +326,13 @@
     el.dataset.shape = node.shape;
     const inner = el.querySelector('.node-inner');
     if (inner) inner.style.backgroundColor = node.color;
+    
+    const luminance = getLuminance(node.color);
     const label = el.querySelector('.node-label');
-    if (label) label.textContent = node.name;
+    if (label) {
+      label.textContent = node.name;
+      label.style.color = luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+    }
   }
 
   function updateEmptyState() {
@@ -721,10 +751,7 @@
 
   function onPointerUp(e) {
     if (state.dragging) {
-      if (!state.dragging.hasMoved) {
-        // It was a click, not a drag → open modal
-        openModal(state.dragging.id);
-      } else {
+      if (state.dragging.hasMoved) {
         saveState();
       }
       state.dragging = null;
@@ -747,20 +774,20 @@
   // ─── Zoom ─────────────────────────────────────
   function onWheel(e) {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.08 : 0.08;
-    zoomAt(delta, e.clientX, e.clientY);
+    const factor = e.deltaY > 0 ? (1 / 1.1) : 1.1;
+    zoomAtFactor(factor, e.clientX, e.clientY);
   }
 
-  function zoomBy(delta) {
+  function zoomByFactor(factor) {
     const vpRect = dom.viewport.getBoundingClientRect();
     const cx = vpRect.width / 2 + vpRect.left;
     const cy = vpRect.height / 2 + vpRect.top;
-    zoomAt(delta, cx, cy);
+    zoomAtFactor(factor, cx, cy);
   }
 
-  function zoomAt(delta, clientX, clientY) {
+  function zoomAtFactor(factor, clientX, clientY) {
     const oldZoom = state.canvas.zoom;
-    const newZoom = Math.max(0.15, Math.min(4, oldZoom + delta));
+    const newZoom = Math.max(0.15, Math.min(4, oldZoom * factor));
 
     // Zoom toward mouse position
     const vpRect = dom.viewport.getBoundingClientRect();
@@ -778,6 +805,9 @@
 
   function applyCanvasTransform() {
     dom.canvas.style.transform = `translate(${state.canvas.x}px, ${state.canvas.y}px) scale(${state.canvas.zoom})`;
+    dom.viewport.style.setProperty('--pan-x', `${state.canvas.x}px`);
+    dom.viewport.style.setProperty('--pan-y', `${state.canvas.y}px`);
+    dom.viewport.style.setProperty('--zoom', state.canvas.zoom);
   }
 
   function updateZoomUI() {
@@ -1007,30 +1037,77 @@
   function ctxChangeColor() {
     const nodeId = state.contextNodeId;
     hideContextMenu();
+    if (nodeId) {
+      openColorModal(nodeId);
+    }
+  }
+
+  // ─── Custom Color Picker ────────────────────────
+  const COLOR_PALETTE = [
+    '#99C1F1', '#8FF0A4', '#F9F06B', '#FFBE6F', '#F66151', '#DC8ADD', '#D3AF8E', '#FFFFFF',
+    '#62A0EA', '#57E389', '#F8E45C', '#FFA348', '#ED333B', '#C061CB', '#C19C7C', '#F6F5F4',
+    '#3584E4', '#33D17A', '#F6D32D', '#FF7800', '#E01B24', '#9141AC', '#986A44', '#DEDEDE',
+    '#1C71D8', '#2EC27E', '#F5C211', '#E66100', '#C01C28', '#813D9C', '#865E3C', '#C0BFBC',
+    '#1A5FB4', '#26A269', '#E5A50A', '#C64600', '#A51D2D', '#613583', '#63452C', '#000000'
+  ];
+
+  function setupColorModal() {
+    dom.colorGrid.innerHTML = '';
+    COLOR_PALETTE.forEach(color => {
+      const swatch = document.createElement('div');
+      swatch.className = 'color-swatch';
+      swatch.style.backgroundColor = color;
+      swatch.addEventListener('click', () => applyColorToTarget(color));
+      dom.colorGrid.appendChild(swatch);
+    });
+
+    dom.colorModalClose.addEventListener('click', () => {
+      dom.colorModalOverlay.style.display = 'none';
+      state.colorTargetId = null;
+    });
+
+    dom.colorModalOverlay.addEventListener('click', (e) => {
+      if (e.target === dom.colorModalOverlay) {
+        dom.colorModalOverlay.style.display = 'none';
+        state.colorTargetId = null;
+      }
+    });
+
+    dom.customColorInput.addEventListener('input', (e) => {
+      const color = e.target.value;
+      dom.customColorPreview.style.backgroundColor = color;
+      applyColorToTarget(color);
+    });
+  }
+
+  function openColorModal(nodeId) {
+    state.colorTargetId = nodeId;
     const node = state.nodes.get(nodeId);
     if (!node) return;
 
-    // Create a hidden color input
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.value = node.color;
-    colorInput.style.position = 'fixed';
-    colorInput.style.opacity = '0';
-    colorInput.style.pointerEvents = 'none';
-    document.body.appendChild(colorInput);
-    colorInput.click();
-    colorInput.addEventListener('input', () => {
-      node.color = colorInput.value;
+    dom.customColorPreview.style.backgroundColor = node.color;
+    dom.customColorInput.value = node.color;
+
+    // Highlight the active swatch
+    const swatches = dom.colorGrid.querySelectorAll('.color-swatch');
+    swatches.forEach(s => s.classList.remove('active'));
+    const matchingSwatch = Array.from(swatches).find(
+      s => s.style.backgroundColor.replace(/ /g,'').toLowerCase() === node.color.toLowerCase()
+    );
+    if (matchingSwatch) matchingSwatch.classList.add('active');
+
+    dom.colorModalOverlay.style.display = 'flex';
+  }
+
+  function applyColorToTarget(color) {
+    if (!state.colorTargetId) return;
+    const node = state.nodes.get(state.colorTargetId);
+    if (node) {
+      node.color = color;
       updateNodeDOM(node);
       renderConnections();
       saveState();
-    });
-    colorInput.addEventListener('change', () => {
-      setTimeout(() => colorInput.remove(), 100);
-    });
-    colorInput.addEventListener('blur', () => {
-      setTimeout(() => colorInput.remove(), 100);
-    });
+    }
   }
 
   function ctxDeleteNode() {
@@ -1069,7 +1146,17 @@
       showToast('Nenhuma caixa para limpar', 'warning');
       return;
     }
-    if (!confirm('Tem certeza que deseja limpar tudo? Esta ação não pode ser desfeita.')) return;
+    if (dom.clearAllBtn.dataset.confirm !== 'true') {
+      dom.clearAllBtn.dataset.confirm = 'true';
+      dom.clearAllBtn.innerHTML = '⚠️ Confirmar Limpeza';
+      setTimeout(() => {
+        dom.clearAllBtn.dataset.confirm = 'false';
+        dom.clearAllBtn.innerHTML = '<span class="icon">🗑️</span> Limpar Tudo';
+      }, 3000);
+      return;
+    }
+    dom.clearAllBtn.dataset.confirm = 'false';
+    dom.clearAllBtn.innerHTML = '<span class="icon">🗑️</span> Limpar Tudo';
     state.nodes.clear();
     state.connections.clear();
     state.selectedNode = null;
@@ -1109,7 +1196,11 @@
       if (!raw) return;
       const data = JSON.parse(raw);
 
-      if (data.theme) setTheme(data.theme);
+      if (data.theme) {
+        state.theme = data.theme;
+        document.documentElement.dataset.theme = data.theme;
+        $$('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === data.theme));
+      }
       if (data.canvas) {
         state.canvas = { ...state.canvas, ...data.canvas };
       }
@@ -1136,6 +1227,9 @@
       nodes: Array.from(state.nodes.values()),
       connections: Array.from(state.connections.values()),
     };
+    
+    saveFlowToHistory(data);
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1143,7 +1237,7 @@
     a.download = `saiflow-${Date.now()}.saiflow`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Mapa exportado com sucesso!', 'success');
+    showToast('Mapa salvo e adicionado ao histórico!', 'success');
   }
 
   function importData(e) {
@@ -1172,6 +1266,7 @@
         updateZoomUI();
         updateEmptyState();
         saveState();
+        saveFlowToHistory(data, true);
         showToast(`Mapa importado: ${state.nodes.size} caixas, ${state.connections.size} conexões`, 'success');
       } catch (err) {
         showToast('Erro ao importar: formato inválido', 'error');
@@ -1204,6 +1299,100 @@
     return div.innerHTML;
   }
 
-  // ─── Start ────────────────────────────────────
+  // ─── Flow History ───────────────────────────────
+  const HISTORY_KEY = 'saiflow_history';
+
+  function saveFlowToHistory(data, isImport = false) {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const defaultName = isImport ? `Importado em ${new Date().toLocaleString()}` : `Flow ${new Date().toLocaleString()}`;
+    const flowName = defaultName;
+    
+    saved.push({
+      id: 'flow_' + Date.now(),
+      title: flowName,
+      date: new Date().toISOString(),
+      data: data
+    });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(saved));
+    renderSavedFlows();
+  }
+
+  function renderSavedFlows() {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    dom.savedFlowsList.innerHTML = '';
+    
+    if (saved.length === 0) {
+      dom.savedFlowsList.innerHTML = '<li style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">Nenhum flow salvo.</li>';
+      return;
+    }
+
+    saved.reverse().forEach(flow => {
+      const li = document.createElement('li');
+      li.className = 'saved-flows-item';
+      
+      const infoDiv = document.createElement('div');
+      infoDiv.style.flex = '1';
+      infoDiv.style.overflow = 'hidden';
+      
+      const titleEl = document.createElement('div');
+      titleEl.className = 'saved-flows-item-title';
+      titleEl.textContent = flow.title;
+      titleEl.style.whiteSpace = 'nowrap';
+      titleEl.style.textOverflow = 'ellipsis';
+      titleEl.style.overflow = 'hidden';
+      
+      const dateEl = document.createElement('div');
+      dateEl.className = 'saved-flows-item-date';
+      dateEl.textContent = new Date(flow.date).toLocaleString();
+      
+      infoDiv.appendChild(titleEl);
+      infoDiv.appendChild(dateEl);
+      
+      const delBtn = document.createElement('button');
+      delBtn.className = 'saved-flows-item-delete';
+      delBtn.textContent = '🗑️';
+      delBtn.title = 'Excluir flow';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm(`Excluir "${flow.title}" do histórico?`)) {
+          const updated = saved.filter(s => s.id !== flow.id);
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(updated.reverse()));
+          renderSavedFlows();
+        }
+      };
+      
+      li.onclick = () => loadFlowFromHistory(flow.data);
+      
+      li.appendChild(infoDiv);
+      li.appendChild(delBtn);
+      dom.savedFlowsList.appendChild(li);
+    });
+  }
+
+  function loadFlowFromHistory(data) {
+    if (!confirm('Carregar este flow substituirá o atual. Continuar?')) return;
+    
+    state.nodes.clear();
+    state.connections.clear();
+    
+    if (data.nodes) {
+      for (const n of data.nodes) state.nodes.set(n.id, n);
+    }
+    if (data.connections) {
+      for (const c of data.connections) state.connections.set(c.id, c);
+    }
+    if (data.theme) setTheme(data.theme);
+    if (data.canvas) state.canvas = { ...state.canvas, ...data.canvas };
+    
+    renderAllNodes();
+    renderConnections();
+    applyCanvasTransform();
+    updateZoomUI();
+    updateEmptyState();
+    saveState();
+    showToast('Flow carregado!', 'success');
+  }
+
+  // ─── Boot ───────────────────────────────────────
   init();
 })();
