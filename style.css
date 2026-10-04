@@ -94,40 +94,88 @@
   --scrollbar-thumb: #c0c0c0;
 }
 
+/* --- Afternoon Mode: Pale Gold + Teal + Tangerine + Amber ---
+   Paleta de 4 cores com papéis bem definidos na hierarquia visual:
+   #EDE5D2 Pale Gold    → Superfícies / fundos (mais neutro e claro)
+   #9A684F Soft Tangerine → Painéis secundários + linhas de conexão
+   #4F685D Soft Dark Teal → Cor primária/brand (botões, estados ativos)
+   #FFB25B Bright Amber  → Acento puro (glow, hover energy, warnings)
+   Cada cor ocupa apenas o espaço onde faz sentido na UI.
+-------------------------------------------------- */
 [data-theme="warm"] {
-  --bg-primary: #F5E6CC;
-  --bg-secondary: #FAF0E0;
-  --bg-tertiary: #EDE0CC;
-  --bg-elevated: #FFF5E6;
-  --border-color: #D6BFA7;
-  --border-hover: #C4A882;
-  --text-primary: #4A3728;
-  --text-secondary: #7A6252;
-  --text-muted: #A1887F;
-  --color-primary: #B08968;
-  --color-primary-hover: #8D6E54;
-  --color-primary-soft: rgba(176,137,104,0.15);
-  --color-success: #6D9B53;
-  --color-success-soft: rgba(109,155,83,0.15);
-  --color-warning: #D4A24E;
-  --color-warning-soft: rgba(212,162,78,0.15);
-  --color-error: #C0392B;
-  --color-error-soft: rgba(192,57,43,0.15);
-  --color-accent: #C17F59;
-  --shadow-xs: 0 1px 2px rgba(74,55,40,0.08);
-  --shadow-sm: 0 2px 6px rgba(74,55,40,0.1);
-  --shadow-md: 0 4px 16px rgba(74,55,40,0.14);
-  --shadow-lg: 0 8px 32px rgba(74,55,40,0.18);
-  --shadow-glow: 0 0 20px rgba(176,137,104,0.25);
-  --grid-dot: rgba(74,55,40,0.06);
-  --grid-dot-accent: rgba(74,55,40,0.12);
-  --overlay-bg: rgba(40,26,16,0.45);
-  --connection-color: #B08968;
-  --connection-hover: #8D6E54;
-  --node-shadow: 0 4px 16px rgba(74,55,40,0.15);
-  --node-glow: 0 0 0 2px rgba(176,137,104,0.5);
-  --scrollbar-track: #ede0cc;
-  --scrollbar-thumb: #c4a882;
+  /* ── Superfícies ──────────────────────────────────────────────
+     Base: Pale Gold (#EDE5D2). É a mais clara e neutra da paleta,
+     ideal para fundos — não compete com conteúdo.                */
+  --bg-primary:   #EDE5D2;   /* Pale Gold puro — canvas do app    */
+  --bg-secondary: #E3D8C2;   /* Pale Gold -4% L — topbar, sidebar */
+  --bg-tertiary:  #D6C9B0;   /* Pale Gold -9% L — hover, dropdown */
+  --bg-elevated:  #F4EFE4;   /* Pale Gold +4% L — modals / cards  */
+
+  /* ── Bordas ───────────────────────────────────────────────────
+     Derivadas do Tangerine dessaturado para não parecer aleatório */
+  --border-color: #C9B59C;   /* Tangerine muito dessaturado — sutil  */
+  --border-hover: #4F685D;   /* Teal — foco claro e elegante no hover */
+
+  /* ── Tipografia ───────────────────────────────────────────────
+     Tom derivado do Teal escurecido: mantém harmonia com o primário
+     sem usar preto puro (que quebraria a paleta quente).          */
+  --text-primary:   #2A3530;  /* Teal muito escuro — "tinta da floresta" */
+  --text-secondary: #4F5C58;  /* Teal médio-acinzentado — textos de apoio */
+  --text-muted:     #8A968F;  /* Teal suavíssimo — placeholders, datas    */
+
+  /* ── Cor Primária / Brand ─────────────────────────────────────
+     Soft Dark Teal (#4F685D): sofisticado, refrescante, contrasta
+     muito bem com o fundo Pale Gold. É o coração interativo da UI. */
+  --color-primary:       #4F685D;              /* Teal — botões, links, seleção ativa  */
+  --color-primary-hover: #3C5248;              /* Teal escuro ao hover/pressed          */
+  --color-primary-soft:  rgba(79,104,93,0.12); /* Teal translúcido — badge, chip bg    */
+
+  /* ── Acento ───────────────────────────────────────────────────
+     Bright Amber (#FFB25B): usado COM PARCIMÔNIA — apenas em glow,
+     ativo de elementos pequenos e warnings. Nunca em fundos grandes. */
+  --color-accent: #D4882A;   /* Amber escurecido 20% para uso em texto/ícone */
+
+  /* ── Estados de Feedback ──────────────────────────────────────
+     Sucesso → teal (já na paleta, coerente).
+     Warning → amber (natural, "luz amarela de atenção").
+     Erro    → siena queimado (harmônico, não-agressivo).          */
+  --color-success:      #4F685D;            /* Teal — sucesso é calmo e seguro      */
+  --color-success-soft: rgba(79,104,93,0.12);
+  --color-warning:      #C07A1A;            /* Amber escuro — aviso legível no fundo */
+  --color-warning-soft: rgba(192,122,26,0.12);
+  --color-error:        #8C3E2F;            /* Siena Queimado — erro discreto         */
+  --color-error-soft:   rgba(140,62,47,0.12);
+
+  /* ── Sombras ──────────────────────────────────────────────────
+     Baseadas no Teal escuro — sombras "frias e verdes" que ficam
+     perfeitas sobre o fundo quente (complementaridade cromática). */
+  --shadow-xs:   0 1px 3px  rgba(42,53,48,0.06);
+  --shadow-sm:   0 2px 8px  rgba(42,53,48,0.08);
+  --shadow-md:   0 4px 16px rgba(42,53,48,0.11);
+  --shadow-lg:   0 8px 32px rgba(42,53,48,0.16);
+  --shadow-glow: 0 0 18px   rgba(255,178,91,0.22); /* Amber glow — quente e especial */
+
+  /* ── Canvas / Grid ────────────────────────────────────────────
+     Tangerine como pontilhado: cria textura de "madeira" no canvas. */
+  --grid-dot:        rgba(154,104,79,0.09);   /* Tangerine subtil    */
+  --grid-dot-accent: rgba(154,104,79,0.18);   /* Tangerine no acento */
+  --overlay-bg:      rgba(42,53,48,0.38);     /* Teal translúcido — overlay de modal */
+
+  /* ── Linhas SVG de Conexão ────────────────────────────────────
+     Tangerine (#9A684F) é perfeito aqui: é um "fio de couro"
+     que se destaca do fundo sem gritar. Amber no hover dá vida. */
+  --connection-color: #9A684F;   /* Soft Tangerine — linha de conexão natural */
+  --connection-hover: #FFB25B;   /* Bright Amber — pop energético ao hover    */
+
+  /* ── Nós no Canvas ────────────────────────────────────────────
+     Sombra Teal + glow Amber: cria tensão visual agradável que
+     destaca o nó selecionado do fundo dourado.                   */
+  --node-shadow: 0 3px 14px rgba(42,53,48,0.12);
+  --node-glow:   0 0 0 2px  rgba(255,178,91,0.45); /* Amber ring — seleção evidente */
+
+  /* ── Scrollbar ── */
+  --scrollbar-track: #E3D8C2;   /* Pale Gold — fundo da track */
+  --scrollbar-thumb: #9A684F;   /* Tangerine — polegar visível e harmônico */
 }
 
 /* --- Global Styles --- */
@@ -320,6 +368,87 @@ body {
   top: 0;
   left: 0;
   height: 100%;
+}
+
+.sidebar-group {
+  border-bottom: 1px solid var(--border-color);
+}
+.sidebar-group:last-child {
+  border-bottom: none;
+}
+
+.sidebar-group-title {
+  padding: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+.sidebar-group-title:hover {
+  background: var(--bg-elevated);
+}
+.sidebar-group-title::marker,
+.sidebar-group-title::-webkit-details-marker {
+  display: none;
+}
+.sidebar-group-title::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 10px;
+  transition: transform var(--transition-fast);
+}
+details[open] > .sidebar-group-title::before {
+  transform: rotate(90deg);
+}
+
+.sidebar-group-content {
+  background: var(--bg-secondary);
+}
+
+.saved-flows-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 16px;
+}
+.saved-flows-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.saved-flows-item:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+.saved-flows-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.saved-flows-item-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.saved-flows-item-delete {
+  background: transparent;
+  border: none;
+  color: var(--color-error);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.saved-flows-item-delete:hover {
+  background: var(--color-error-soft);
 }
 
 .sidebar-section {
@@ -529,9 +658,13 @@ body {
   flex: 1;
   overflow: hidden;
   position: relative;
-  background: var(--bg-primary);
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle, var(--grid-dot) calc(1.2px * var(--zoom, 1)), transparent calc(1.2px * var(--zoom, 1)));
+  background-size: calc(28px * var(--zoom, 1)) calc(28px * var(--zoom, 1));
+  background-position: var(--pan-x, 0px) var(--pan-y, 0px);
   cursor: grab;
-  transition: background var(--transition-slow);
+  transition: background-color var(--transition-slow), background-image var(--transition-slow);
+  touch-action: none;
 }
 .canvas-viewport.panning {
   cursor: grabbing;
@@ -544,21 +677,19 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 8000px;
-  height: 8000px;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
   transform-origin: 0 0;
-  background-image:
-    radial-gradient(circle, var(--grid-dot) 1.2px, transparent 1.2px);
-  background-size: 28px 28px;
-  transition: background-image var(--transition-slow);
 }
 
 .connections-svg {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
   pointer-events: none;
   z-index: 1;
 }
@@ -868,6 +999,114 @@ body {
 .modal-footer .btn {
   width: auto;
   padding: 8px 20px;
+}
+
+/* --- Color Picker Modal --- */
+.color-picker-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid var(--border-color);
+}
+.color-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+.color-picker-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+.color-picker-body {
+  padding: 16px;
+}
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.color-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+.color-swatch.active {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.color-picker-custom-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.custom-color-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.custom-color-row {
+  display: flex;
+  gap: 12px;
+}
+.custom-color-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  font-size: 20px;
+  color: var(--text-secondary);
+  transition: background 0.2s;
+}
+.custom-color-btn:hover {
+  background: var(--bg-hover);
+}
+.custom-color-btn input[type="color"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.custom-color-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+}
+.custom-color-preview.selected {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* --- Context Menu --- */
